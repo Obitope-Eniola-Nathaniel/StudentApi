@@ -1,6 +1,10 @@
-﻿namespace StudentApi.Repositories
+﻿using StudentApi.Models;
+
+namespace StudentApi.Repositories;
+
+public interface IStudentRepository
 {
-    public class IStudentRepository
-    {
-    }
+    Task<Student?> GetByEmailAsync(string email);
+
+    Task<Student> CreateAsync(Student student);
 }
