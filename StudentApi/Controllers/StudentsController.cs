@@ -22,11 +22,13 @@ public class StudentsController : Controller
     {
         if (!ModelState.IsValid)
         {
+            var errors = ValidationHelper.ExtractErrors(ModelState);
+
             return BadRequest(new ApiResponse<object>
             {
                 Message = "Validation failed",
                 ResponseCode = "99",
-                Data = ModelState
+                Data = errors
             });
         }
 
@@ -35,11 +37,7 @@ public class StudentsController : Controller
 
         if (existingStudent is not null)
         {
-            return Conflict(new ApiResponse<object>
-            {
-                Message = "Email already exists",
-                ResponseCode = "99"
-            });
+            return Conflict(ApiResponse<object>.Failure("Email Already Exit", ResponseCodes.Duplicate));
         }
 
         var student = new Student
@@ -97,11 +95,7 @@ public class StudentsController : Controller
 
         if (student is null)
         {
-            return NotFound(new ApiResponse<object>
-            {
-                Message = "Student not found",
-                ResponseCode = "99"
-            });
+            return NotFound(ApiResponse<object>.Failure("Student not found", ResponseCodes.NotFound));
         }
 
         var response = new StudentResponse
@@ -125,11 +119,13 @@ public class StudentsController : Controller
     {
         if (!ModelState.IsValid)
         {
+            var errors = ValidationHelper.ExtractErrors(ModelState);
+
             return BadRequest(new ApiResponse<object>
             {
                 Message = "Validation failed",
                 ResponseCode = "99",
-                Data = ModelState
+                Data = errors
             });
         }
 
@@ -137,22 +133,14 @@ public class StudentsController : Controller
 
         if (existingStudent is null)
         {
-            return NotFound(new ApiResponse<object>
-            {
-                Message = "Student not found",
-                ResponseCode = "99"
-            });
+            return NotFound(ApiResponse<object>.Failure("Student not found", ResponseCodes.NotFound));
         }
 
         var duplicateEmailStudent = await _studentRepository.GetByEmailExceptCurrentAsync(request.Email, id);
 
         if (duplicateEmailStudent is not null)
         {
-            return Conflict(new ApiResponse<object>
-            {
-                Message = "Email already exists",
-                ResponseCode = "99"
-            });
+            return Conflict(ApiResponse<object>.Failure("Email Already Exit", ResponseCodes.Duplicate));
         }
 
         existingStudent.FirstName = request.FirstName;
@@ -170,12 +158,8 @@ public class StudentsController : Controller
             PhoneNumber = updatedStudent.PhoneNumber
         };
 
-        return Ok(new ApiResponse<StudentResponse>
-        {
-            Message = "Student updated successfully",
-            ResponseCode = "00",
-            Data = response
-        });
+        return Ok(ApiResponse<StudentResponse>.Success(response, "Student created successfully"));
+  
     }
 
 
@@ -187,11 +171,7 @@ public class StudentsController : Controller
 
         if (!deleted)
         {
-            return NotFound(new ApiResponse<object>
-            {
-                Message = "Student not found",
-                ResponseCode = "99"
-            });
+            return NotFound(ApiResponse<object>.Failure("Student not found", ResponseCodes.NotFound));
         }
 
         return Ok(new ApiResponse<object>
